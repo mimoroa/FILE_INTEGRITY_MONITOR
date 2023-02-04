@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+import hashlib
+from smtplib import SMTP
+
+print("Hello to File Integrity Monitor, please ether the filepath of the document >
+filePath = input("Enter the file path ex /etc/documents/file :")
+check_filePath = input("Enter the new file path ex /etc/documents/file :")
+
+#This fuction opens and hashes the file using sha256 
+def gethash(filePath):
+    sha256 = hashlib.sha256()
+    with open(filePath, "r") as file:
+        hash = file.read()
+        sha256.update(hash.encode("utf-8"))
+        return sha256.hexdigest()
+
+#This function creates,populates, and sends the alert email.
+def sendemail():
+    EMAIL_SENDER = "example@gmail.com"
+    EMAIL_PASSWD = "pa$$w0rd"
+    EMAIL_RECIEVER = "example@fake.com"
+    SUBJECT = "File Integrity Alert"
+    BODY = "Someone has edited this file!!!"
+
+    smtp_port = SMTP("smtp.gmail.com", 587)
+    smtp_port.ehlo()
+    smtp_port.starttls()
+    smtp_port.login(EMAIL_SENDER, EMAIL_PASSWD)
+    final_message = f"Subject:{SUBJECT}\n\n{BODY}"
+    smtp_port.sendmail(EMAIL_SENDER, EMAIL_RECIEVER, final_message)
+    print("Email Sent")
+    smtp_port.quit()
+
+#Creates a baseline hash and compares it to the current file in the directory.
+
+baseline = gethash(filePath).encode("utf-8")
+print("[+] Just calculated your baseline")
+print("[+] Checking")
+
+while True:
+       check = gethash(check_filePath).encode("utf-8")
+       if check != baseline:
+           sendemail()
+           print("[+] Someone edited the file")
+           baseline = check
+
+
